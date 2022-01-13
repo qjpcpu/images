@@ -1,5 +1,6 @@
 #!/bin/bash
 
+chmod 600 keyfile
 docker-compose up -d
 
 sleep 5
