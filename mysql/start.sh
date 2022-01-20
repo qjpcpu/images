@@ -10,4 +10,12 @@ if [ -z "$PORT" ];then
 	echo "need port"
 	exit 1
 fi
-docker run -it --rm --name mysql-$PORT -p $PORT:3306 -v $PWD/conf:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=pwd -e MYSQL_DATABASE=mydb -d mysql:$VERSION --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+docker run -it --rm --name mysql-$VERSION-$PORT -p $PORT:3306 -v $PWD/conf:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=pwd -e MYSQL_DATABASE=mydb -d mysql:$VERSION --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+
+STOPFILE=stop-$VERSION-$PORT.sh
+
+echo '#!/bin/bash' > $STOPFILE
+echo "docker stop mysql-$VERSION-$PORT" >> $STOPFILE
+echo 'rm -f $0' >> $STOPFILE
+chmod +x $STOPFILE
