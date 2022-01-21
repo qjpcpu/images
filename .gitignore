@@ -1,4 +1,4 @@
 data
 forks
 mongo-shared/docker-compose.yml
-/mysql/stop*
+stop-*

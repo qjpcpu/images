@@ -1,14 +1,26 @@
 #!/bin/bash
 
+VERSION=$1
+PORT=$2
+if [ -z "$VERSION" ];then
+        echo "need version"
+        exit 1
+fi
+if [ -z "$PORT" ];then
+        echo "need port"
+        exit 1
+fi
+
 PASSWORD=pwd
-PORT=27017
+DIR=forks/$PORT
+mkdir -p $DIR
 
 (cat<<EOF
 version: '2'
 
 services:
   mongodb-sharded-$PORT:
-    image: docker.io/bitnami/mongodb-sharded:4.4
+    image: docker.io/bitnami/mongodb-sharded:$VERSION
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-sharded-$PORT
       - MONGODB_SHARDING_MODE=mongos
@@ -20,7 +32,7 @@ services:
       - "$PORT:27017"
 
   mongodb-shard-$PORT-0:
-    image: docker.io/bitnami/mongodb-sharded:4.4
+    image: docker.io/bitnami/mongodb-sharded:$VERSION
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-shard-$PORT-0
       - MONGODB_SHARDING_MODE=shardsvr
@@ -33,7 +45,7 @@ services:
       - 'shard0_data-$PORT:/bitnami'
 
   mongodb-shard-$PORT-1:
-    image: docker.io/bitnami/mongodb-sharded:4.4
+    image: docker.io/bitnami/mongodb-sharded:$VERSION
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-shard-$PORT-1
       - MONGODB_SHARDING_MODE=shardsvr
@@ -46,7 +58,7 @@ services:
       - 'shard1_data-$PORT:/bitnami'
 
   mongodb-cfg-$PORT:
-    image: docker.io/bitnami/mongodb-sharded:4.4
+    image: docker.io/bitnami/mongodb-sharded:$VERSION
     environment:
       - MONGODB_ADVERTISED_HOSTNAME=mongodb-cfg-$PORT
       - MONGODB_SHARDING_MODE=configsvr
@@ -67,7 +79,16 @@ volumes:
   cfg_data-$PORT:
     driver: local
 EOF
-) > docker-compose.yml
+) > $DIR/docker-compose.yml
 
-docker-compose up -d
+(cd $DIR && docker-compose up -d)
+
+STOPFILE=stop-$PORT.sh
+(cat<<EOF
+#!/bin/bash
+(cd $DIR && docker-compose down -v)
+rm -fr $DIR
+EOF
+) > $STOPFILE
+chmod +x $STOPFILE
 
