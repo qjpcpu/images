@@ -11,6 +11,8 @@ if [ -z "$PORT" ];then
         exit 1
 fi
 
+PORT1=`expr $PORT + 1`
+
 DIR=forks/$PORT
 mkdir -p $DIR
 
@@ -18,7 +20,7 @@ mkdir -p $DIR
 version: '2'
 
 services:
-  postgresql-master:
+  postgresql-master-$PORT:
     image: docker.io/bitnami/postgresql:$VERSION
     ports:
       - $PORT:5432
@@ -31,19 +33,19 @@ services:
       - POSTGRESQL_REPLICATION_PASSWORD=repl_password
       - POSTGRESQL_USERNAME=$USER
       - POSTGRESQL_PASSWORD=$PWD
-      - POSTGRESQL_DATABASE=my_database
+      - POSTGRESQL_DATABASE=mydb
       - ALLOW_EMPTY_PASSWORD=yes
-  postgresql-slave:
+  postgresql-slave-$PORT:
     image: docker.io/bitnami/postgresql:$VERSION
     ports:
-      - '5432'
+      - $PORT1:5432
     depends_on:
-      - postgresql-master
+      - postgresql-master-$PORT
     environment:
       - POSTGRESQL_REPLICATION_MODE=slave
       - POSTGRESQL_REPLICATION_USER=repl_user
       - POSTGRESQL_REPLICATION_PASSWORD=repl_password
-      - POSTGRESQL_MASTER_HOST=postgresql-master
+      - POSTGRESQL_MASTER_HOST=postgresql-master-$PORT
       - POSTGRESQL_USERNAME=$USER
       - POSTGRESQL_PASSWORD=$PWD
       - POSTGRESQL_MASTER_PORT_NUMBER=5432
